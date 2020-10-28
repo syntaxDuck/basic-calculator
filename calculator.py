@@ -3,8 +3,81 @@
 import tkinter as tk
 import tkinter.font as tkfont
 import sys
+import re
 
-def layout_grid():
+class DefaultButton:
+    '''This class simply has default values for the buttons to be used'''
+    def __init__(self, row, col, command, text, root):
+        '''Initalizes the object'''
+        self.button = tk.Button(root, text=text, command = command)
+        self.button.grid(row=row,column=col, ipadx=40, ipady=20,
+            padx=1, pady=1, sticky="NESW")
+
+class CalculatorEntry:
+    '''Class to define the calculator entry window'''
+    def __init__(self, row, col, root):
+        self.answer_flag = 0
+        self.entry = tk.Entry(root, width=50, borderwidth=5, justify='right',
+        state='disabled', font=tkfont.Font(size=18,weight='bold'))
+        self.entry.grid(row=row, column=col, columnspan=5,
+            padx=5, pady=5, sticky="NESW")
+
+    def input(self, string):
+        '''Inputs a string into an entry box'''
+        if self.answer_flag:
+            self.delete_all()
+            self.answer_flag = 0
+        
+        self.entry['state'] = 'normal'   #Unlock Entry
+        self.entry.insert(tk.END,string) #Insert string at the end of text
+        self.entry['state'] = 'disabled' #Locks
+    
+    def delete_all(self):
+        '''Deletes all text in a entry box'''
+        self.entry['state'] = 'normal'       #Unlocks Entry
+        self.entry.delete(tk.ANCHOR, tk.END) #Delete all text in entry
+        self.entry['state'] = 'disabled'     #Locks Entry
+
+    def compile_expression(self):
+        ''' Compiles the inputed string and determins 
+            what operations need to happen'''
+        expression = self.entry.get()
+        values = re.split(r'\+|-|/|\*', expression)
+        values = [int(num) for num in values]
+        operators = re.findall(r'\+|-|\*|/', expression)
+
+        while len(values) > 1:
+            if operators[0] == '+':
+                num1 = values[0]
+                num2 = values.pop(1)
+                values[0] = num1 + num2
+            elif operators[0] == '-':
+                num1 = values[0]
+                num2 = values.pop(1)
+                values[0] = num1 - num2
+            elif operators[0] == '*':
+                num1 = values[0]
+                num2 = values.pop(1)
+                values[0] = num1 * num2
+            elif operators[0] == '/':
+                num1 = values[0]
+                num2 = values.pop(1)
+                values[0] = num1 / num2
+            
+            operators.pop(0)
+        
+        if isinstance(values[0], float):
+            result = "{:.4f}".format(values[0])
+        else:
+            result = str(values[0])
+
+        self.delete_all()
+        self.input(result)
+        self.answer_flag = 1
+
+
+
+def layout_grid(root):
     ''' Creates grid and buttons to be used in the program and returns
         a dictonary containing all buttons for future minipulation      '''
 
@@ -12,141 +85,69 @@ def layout_grid():
     for index in range(5):
         root.rowconfigure(index, weight=1)
     for index in range(4):
-        root.columnconfigure(index, weight=1)   
-
-    #Declare dictinary for grid items
-    grid_items = {}
+        root.columnconfigure(index, weight=1)  
 
     #Create Text Box
-    entry_box = tk.Entry(root, width=50, borderwidth=5, justify='right',
-        state='disabled', font=tkfont.Font(size=18,weight='bold'))
-    entry_box.grid(row=0, column=0, columnspan=5, padx=5, pady=5, sticky="NESW")
+    calc_window = CalculatorEntry(row=0, col=0, root=root)
     
-    #Add entry box to grid items
-    grid_items['entry_box'] = entry_box
-
-    #button dictinary
+    #Dictinary for all buttons
     buttons = {}
 
-    #Cool but convoluted way to declare number buttons
-    # #Add number buttons to dict
-    # numbers = list(range(10))
-    # for row in range(1,5):
-    #     for column in range(2,-1,-1):
-    #         buttons[numbers[-1]] = tk.Button(root, text=str(numbers[-1]))
-    #         buttons[numbers.pop()].grid(row=row,
-    #             column=(0 if row == 4 else column),
-    #             ipadx=40, ipady=20, padx=1, pady=1, sticky="NESW")
-    #         if row == 4:
-    #             break
-    
-    #Add number buttons
-    buttons['0'] = tk.Button(root, text="0",
-        command= lambda: input_button('0', entry_box))
-    buttons['1'] = tk.Button(root, text="1",
-        command= lambda: input_button('1', entry_box))
-    buttons['2'] = tk.Button(root, text="2",
-        command= lambda: input_button('2', entry_box))
-    buttons['3'] = tk.Button(root, text="3",
-        command= lambda: input_button('3', entry_box))
-    buttons['4'] = tk.Button(root, text="4",
-        command= lambda: input_button('4', entry_box))
-    buttons['5'] = tk.Button(root, text="5",
-        command= lambda: input_button('5', entry_box))
-    buttons['6'] = tk.Button(root, text="6",
-        command= lambda: input_button('6', entry_box))
-    buttons['7'] = tk.Button(root, text="7",
-        command= lambda: input_button('7', entry_box))
-    buttons['8'] = tk.Button(root, text="8",
-        command= lambda: input_button('8', entry_box))
-    buttons['9'] = tk.Button(root, text="9",
-        command= lambda: input_button('9', entry_box))
+    #Number Buttons
+    buttons['0'] = DefaultButton(row=4, col=0, text='0', root=root,
+        command= lambda: calc_window.input('0'))
+    buttons['1'] = DefaultButton(row=3, col=0, text='1', root=root,
+        command= lambda: calc_window.input('1'))
+    buttons['2'] = DefaultButton(row=3, col=1, text='2', root=root,
+        command= lambda: calc_window.input('2'))
+    buttons['3'] = DefaultButton(row=3, col=2, text='3', root=root,
+        command= lambda: calc_window.input('3'))
+    buttons['4'] = DefaultButton(row=2, col=0, text='4', root=root,
+        command= lambda: calc_window.input('4'))
+    buttons['5'] = DefaultButton(row=2, col=1, text='5', root=root,
+        command= lambda: calc_window.input('5'))
+    buttons['6'] = DefaultButton(row=2, col=2, text='6', root=root,
+        command= lambda: calc_window.input('6'))
+    buttons['7'] = DefaultButton(row=1, col=0, text='7', root=root,
+        command= lambda: calc_window.input('7'))
+    buttons['8'] = DefaultButton(row=1, col=1, text='8', root=root,
+        command= lambda: calc_window.input('8'))
+    buttons['9'] = DefaultButton(row=1, col=2, text='9', root=root,
+        command= lambda: calc_window.input('9'))
 
-    #Add clear button to dict
-    buttons["clear"] = tk.Button(root, text="Clear",
-        command= lambda: delete_entry(entry_box))
+    #Arithmatic Buttons
+    buttons['+'] = DefaultButton(row=1, col=3, text='+', root=root,
+        command= lambda: calc_window.input('+'))
+    buttons['-'] = DefaultButton(row=2, col=3, text='-', root=root,
+        command= lambda: calc_window.input('-'))
+    buttons['*'] = DefaultButton(row=3, col=3, text='*', root=root,
+        command= lambda: calc_window.input('*'))
+    buttons['/'] = DefaultButton(row=4, col=3, text='/', root=root,
+        command= lambda: calc_window.input('/'))
+    buttons['='] = DefaultButton(row=4, col=2,
+        command=calc_window.compile_expression, text='=', root=root)
 
-    #Add arithmetic buttons
-    buttons["+"] = tk.Button(root, text="+",
-        command= lambda: input_button('+', entry_box))
-    buttons["-"] = tk.Button(root, text="-",
-        command= lambda: input_button('-', entry_box))
-    buttons["/"] = tk.Button(root, text="/",
-        command= lambda: input_button('/', entry_box))
-    buttons["="] = tk.Button(root, text="=",
-        command= lambda: None)
+    #Clear Buttons
+    buttons['clear'] = DefaultButton(row=4, col=1,
+        command= calc_window.delete_all, text='clear', root=root)
+    buttons['clear'].button.grid(ipadx=0, ipady=0)
 
-    ##Declare button properties##
-    #Numbers
-    buttons["0"].grid(row=1,column=0, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["1"].grid(row=1,column=1, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["2"].grid(row=1,column=2, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["3"].grid(row=2,column=0, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["4"].grid(row=2,column=1, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["5"].grid(row=2,column=2, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["6"].grid(row=3,column=0, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["7"].grid(row=3,column=1, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["8"].grid(row=3,column=2, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["9"].grid(row=4,column=0, ipadx=40, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    #Controls
-    buttons["clear"].grid(row=4, column=1, columnspan=2, ipadx=80, ipady=20,
-        padx=1, pady=1, sticky="NESW")
-    buttons["+"].grid(
-        row=1, column=3, ipadx=40, ipady=20, padx=1, pady=1, sticky="NESW")
-    buttons["-"].grid(
-        row=2, column=3, ipadx=40, ipady=20, padx=1, pady=1, sticky="NESW")
-    buttons["="].grid(
-        row=4, column=3, ipadx=40, ipady=20, padx=1, pady=1, sticky="NESW")
-    buttons["/"].grid(
-        row=3, column=3, ipadx=40, ipady=20, padx=1, pady=1, sticky="NESW")
-    
-    #Sets the font size of all buttons
-    for button in buttons.values():
-        button['font'] = tkfont.Font(size=12)
-    
-    #Add buttons to grid dict
-    grid_items['buttons'] = buttons
-
-    return grid_items
-
-def input_button(string, entry):
-    '''Inputs a string into an entry box'''
-    entry['state'] = 'normal'   #Set to a normal state so edits can be made
-    entry.insert(tk.END,string) #Insert string at the end of the entry text
-    entry['state'] = 'disabled' #Lock the entry box again
-
-def delete_entry(entry):
-    '''Deletes all text in a entry box'''
-    entry['state'] = 'normal'   #Set to a normal state so edits can be made
-    entry.delete(0, tk.END)     #Delete all text in entry
-    entry['state'] = 'disabled' #Lock the entry box again
 
 #Create window
-root = tk.Tk()
-root.geometry("300x400")
-root.title("Calculator")
+window = tk.Tk()
+window.geometry("300x400")
+window.title("Calculator")
 
 #Make window not resizable
-root.resizable(width=0, height=0)
+window.resizable(width=0, height=0)
 
-#Create buttons and grid system
-grid_dict = layout_grid()
+layout_grid(window)
 
 #Create loop for GUI
 while True:
     try:
-        root.update_idletasks()
-        root.update()
+        window.update_idletasks()
+        window.update()
     except tk.TclError:
-        print(f'Window was closed')
+        print('Window was closed')
         sys.exit()
