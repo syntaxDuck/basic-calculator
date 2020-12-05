@@ -2,7 +2,7 @@
 
 import tkinter as tk
 import tkinter.font as tkfont
-import sys
+import os
 import re
 
 class DefaultButton:
@@ -146,6 +146,7 @@ def layout_grid(root):
 
 #Create window
 window = tk.Tk()
+window.iconbitmap('D:\Dev\Python\Calculator\icon.ico')
 window.geometry("300x400")
 window.title("Calculator")
 window.configure(bg='black')
@@ -161,5 +162,4 @@ while True:
         window.update_idletasks()
         window.update()
     except tk.TclError:
-        print('Window was closed')
-        sys.exit()
+        os._exit(1)
