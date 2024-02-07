@@ -160,7 +160,12 @@ def layout_grid(root):
 
 # Create window
 window = tk.Tk()
-window.iconbitmap("D:\\Dev\\Python\\Calculator\\icon.ico")
+
+try:
+    window.iconbitmap(os.getcwd() + "/icon.ico")
+except tk.TclError:
+    print("Bitmap not defined")
+
 window.geometry("300x400")
 window.title("Calculator")
 window.configure(bg="black")
@@ -176,5 +181,5 @@ while True:
         window.update_idletasks()
         window.update()
     except tk.TclError:
+        window.destroy()
         os._exit(1)
-
